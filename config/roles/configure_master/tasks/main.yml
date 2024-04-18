@@ -1,0 +1,21 @@
+- name: Install yum pacakges
+  ansible.builtin.yum:
+    name: "{{ packages }}"
+  become: true
+  vars:
+    packages:
+      - python
+      - python-pip
+      - wget
+      - git
+      - tmux
+
+- name: Install python packages
+  ansible.builtin.pip:
+    name:
+      - awscli
+      - s3fs
+      - sqlalchemy
+      - psycopg2-binary
+      - prefect
+    state: present

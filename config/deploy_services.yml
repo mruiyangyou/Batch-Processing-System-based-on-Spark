@@ -1,0 +1,31 @@
+# - name: Deploy spark
+#   hosts: node_worker:node_master
+#   roles:
+#      - spark_install
+#     - configure_spark
+
+# - name: Start Spark master
+#   hosts: node_master
+#   roles:
+#     - spark_host
+#     - deploy_monitoring
+#     - deploy_prefect
+
+- name: Start Spark workers
+  hosts: node_worker
+  remote_user: ec2-user
+  roles:
+    - spark_worker
+    # - install_nodeexporter
+# - name: deploy postgre sql and prefect on client machine
+#   hosts: database_server
+#   remote_user: ec2-user
+#   roles:
+#     - deploy_postgre
+#     - connect_prefect
+# - name: install and start prometheus, grafana and prefect server
+#   hosts: node_master
+#   remote_user: ec2-user
+#   roles:
+#     - deploy_monitoring
+#     - deploy_prefect

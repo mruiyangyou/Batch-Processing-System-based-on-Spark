@@ -1,0 +1,55 @@
+- name: Install Java 8
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.dnf:
+    name: java-1.8.0-openjdk
+    state: latest
+
+- name: Install spark
+  remote_user: ec2-user
+  ansible.builtin.get_url:
+    url: https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz
+    dest: /home/ec2-user/
+
+- name: make sure it is removed
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.file:
+    path: /opt/spark
+    state: absent
+
+- name: Create directory
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.file:
+    path: /opt/spark
+    state: directory
+
+- name: Extract spark
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.unarchive:
+    src: /home/ec2-user/spark-3.5.0-bin-hadoop3.tgz
+    dest: /home/ec2-user/
+
+- name: move spark
+  become: true
+  become_user: root
+  become_method: sudo
+  ansible.builtin.shell:
+    cmd: mv /home/ec2-user/spark-3.5.0-bin-hadoop3/* /opt/spark/
+    removes: /home/ec2-user/spark-3.5.0-bin-hadoop3
+
+- name: Delete original file tgz
+  ansible.builtin.file:
+    path: /home/ec2-user/spark-3.5.0-bin-hadoop3.tgz
+    state: absent
+
+- name: Delete original file
+  ansible.builtin.file:
+    path: /home/ec2-user/spark-3.5.0-bin-hadoop3
+    state: absent

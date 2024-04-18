@@ -1,0 +1,41 @@
+- name: accept repo GPG key
+  become: true
+  become_user: root
+  ansible.builtin.shell:
+    cmd: rpm --import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9
+- name: Install EPEL
+  become: true
+  become_user: root
+  ansible.builtin.dnf:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+    state: present
+- name: install node-exporter
+  become: true
+  become_user: root
+  ansible.builtin.dnf:
+    name: golang-github-prometheus-node-exporter
+    state: latest
+- name: move service file
+  become: true
+  become_user: root
+  ansible.builtin.copy:
+    src: node_exporter.service
+    dest: /etc/systemd/system/node_exporter.service
+    owner: root
+    group: root
+- name: start node-exporter
+  become: true
+  become_user: root
+  ansible.builtin.service:
+    name: node_exporter
+    state: started
+    daemon_reload: true
+# - name: open port 9100
+#   become: true
+#   become_user: root
+#   ansible.posix.firewalld:
+#     port: 9100/tcp
+#     permanent: true
+#     state: disabled
+#     zone: public
+#     immediate: true

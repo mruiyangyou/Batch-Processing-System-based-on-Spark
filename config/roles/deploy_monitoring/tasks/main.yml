@@ -1,0 +1,59 @@
+- name: Install Golang
+  become: true
+  become_user: root
+  dnf:
+    name: golang
+    state: present
+
+- name: Install EPEL release
+  become: true
+  become_user: root
+  command: dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+
+- name: Import RPM GPG KEY for EPEL 9
+  become: true
+  become_user: root
+  command: rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
+
+- name: Install Prometheus and Node Exporter
+  become: true
+  become_user: root
+  dnf:
+    name:
+      - golang-github-prometheus
+      - golang-github-prometheus-node-exporter
+    state: present
+    # nogpgcheck: yes
+    disable_gpg_check: yes
+
+- name: Install Grafana
+  become: true
+  become_user: root
+  dnf:
+    name: grafana
+    state: present
+
+- name: Start Prometheus
+  become: true
+  become_user: root
+  command: prometheus --config.file=/etc/prometheus/prometheus.yml
+
+- name: Reload systemd daemon
+  become: true
+  become_user: root
+  systemd:
+    daemon_reload: yes
+
+- name: Start Grafana server
+  become: true
+  become_user: root
+  systemd:
+    name: grafana-server
+    state: started
+
+- name: Enable Grafana server on boot
+  become: true
+  become_user: root
+  systemd:
+    name: grafana-server
+    enabled: yes

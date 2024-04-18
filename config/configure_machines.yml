@@ -1,0 +1,21 @@
+- name: configure working machines
+  hosts: node_worker
+  remote_user: ec2-user
+  roles:
+    - attach_storage
+    - configure_worker
+
+- name: install pyspark and prefect on one of the client machine as spark driver
+  hosts: database_server
+  remote_user: ec2-user
+  ansible.builtin.pip:
+    name:
+      - pyspark
+      - prefect
+    state: present
+
+- name: configure master machine
+  hosts: node_master
+  remote_user: ec2-user
+  roles:
+    - configure_master

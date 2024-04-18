@@ -1,0 +1,34 @@
+# - name: copy the conf file
+#   become: true
+#   become_user: root
+#   copy:
+#     src: "/opt/spark/conf/spark-defaults.conf.template"
+#     dest: "/opt/spark/conf/spark-defaults.conf"
+#     force: no
+#     remote_src: yes
+
+# - name: modify the directory
+#   become: true
+#   become_user: root
+#   lineinfile:
+#     path: "/opt/spark/conf/spark-defaults.conf"
+#     line: "spark.local.dir /home/ec2-user/data"
+#     create: no
+#
+# - name: stop spark on the working machines
+#   become: true
+#   become_user: ec2-user
+#   ansible.builtin.shell:
+#     cmd: stop-worker.sh
+# - name: start spark on the workding machines and connect to the host
+#   become: true
+#   become_user: ec2-user
+#   ansible.builtin.shell:
+#     cmd: start-worker.sh spark://10.0.9.154:7077
+
+- name: remove /opt/spark/work
+  become: true
+  become_user: root
+  ansible.builtin.file:
+    path: /opt/spark/work
+    state: absent

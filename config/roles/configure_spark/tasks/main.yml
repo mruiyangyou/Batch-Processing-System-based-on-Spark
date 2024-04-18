@@ -1,0 +1,12 @@
+- name: Ensure /opt/spark and subdirectories have correct permissions
+  become: true
+  become_user: root
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: ec2-user  # Change this to the user running Spark
+    group: ec2-user  # Change this to the user's group, if necessary
+    mode: '0755'  # This gives read/write/execute permissions to owner, and read/execute to group and others
+  loop:
+    - /opt/spark
+    - /opt/spark/logs

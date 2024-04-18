@@ -1,0 +1,29 @@
+- name: Install yum pacakges
+  ansible.builtin.yum:
+    name: "{{ packages }}"
+  become: true
+  vars:
+    packages:
+      - python
+      - python-pip
+      - wget
+      - git
+      - tmux
+
+- name: Install python packages
+  ansible.builtin.pip:
+    name:
+      - pandas
+      - transformers
+      - awscli
+      - s3fs
+      - pyarrow
+      - sqlalchemy
+      - psycopg2-binary
+    state: present
+
+- name: Install PyTorch (CPU version)
+  ansible.builtin.pip:
+    name: torch
+    extra_args: "--index-url https://download.pytorch.org/whl/cpu"
+    state: present
