@@ -3,20 +3,25 @@ import subprocess
 from datetime import datetime
 import pandas as pd
 from st_files_connection import FilesConnection
+from typing import Tuple, Optional
 
+# set the title
 st.title("Text Classification Service")
 
+# set user option
 option =  st.radio('Choose data input method:', ('Upload CSV File', 'Use Hugging Face Dataset'))
 
 # Initialize variables to ensure they are defined outside of the conditional blocks
 uploaded_file = None
 dataset_name = ""
-df = None  # Initialize df to None to handle scope issues
+df = None  
 conn = st.connection('s3', type=FilesConnection)
 
+# when user choose to upload its own file
 if option == 'Upload CSV File':
     uploaded_file = st.file_uploader("Choose a file", type = ['csv'])
     
+    # perform check for the uploading files
     if uploaded_file is not None:
         try:
             df = pd.read_csv(uploaded_file)
@@ -26,41 +31,52 @@ if option == 'Upload CSV File':
             st.write(df.head(10))
         except Exception as e:
             st.error(e)
-
+            
+# when user choose to use data from huggingface
 elif option == 'Use Hugging Face Dataset':
     dataset_name = st.text_input('Enter the Hugging Face dataset name:', placeholder='imdb')
 
-def hf_text_classification_pipeline(run_id: str, dataset_name: str):
+def hf_text_classification_pipeline(run_id: str, dataset_name: str) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Runs a text classification pipeline using a specified dataset from Hugging Face.
+
+    Args:
+        run_id (str): Unique identifier for the run.
+        dataset_name (str): Name of the dataset on the Hugging Face website.
+
+    Returns:
+        Tuple[Optional[str], Optional[str]]: A tuple containing the stdout if successful, or None and stderr if an error occurs.
+    """
     try:
-        # Constructing the command to call the external script with the dataset name
         command = ["python", "text_classification_pipeline.py", "hf", run_id, dataset_name]
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         return result.stdout, None
     except subprocess.CalledProcessError as e:
         return None, e.stderr
 
-def own_text_classification_pipeline(run_id: str, path: str):
+def own_text_classification_pipeline(run_id: str, path: str) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Runs a text classification pipeline using a local dataset.
+
+    Args:
+        run_id (str): Unique identifier for the run.
+        path (str): File path to the local dataset.
+
+    Returns:
+        Tuple[Optional[str], Optional[str]]: A tuple containing the stdout if successful, or None and stderr if an error occurs.
+    """
     try:
-        # Constructing the command to call the external script with the dataset name
         command = ["python", "text_classification_pipeline.py", "own", run_id, path]
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         return result.stdout, None
     except subprocess.CalledProcessError as e:
         return None, e.stderr
     
-def test_upload(df, id, path):
-    try:
-        df.to_csv(path, index = None)
-        return  id, None
-    except Exception as e:
-        return None, e
-
 @st.cache_data
 def convert_df(df):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv().encode('utf-8')
 
-# Submit button
+# when the submit button is pressed
 if st.button('Submit'):
     if option == 'Upload CSV File' and uploaded_file is None:
         st.error('Please upload a file.')
@@ -100,7 +116,6 @@ if st.button('Submit'):
         if option == 'Upload CSV File' and df is not None:
             df.to_csv(file_path, index = None)
             output, error = own_text_classification_pipeline(run_id, file_path)
-            # output, error = test_upload(df, run_id, file_path)
             st.write(f"Upload to :{file_path}")
             if error:
                 st.error(f'Error during processing: {error}')

@@ -10,8 +10,8 @@ ssh -i ~/.ssh/comp0239_key ec2-user@ec2-18-130-16-27.eu-west-2.compute.amazonaws
 
 Run the app
 ```bash
-git clone 
-cd analysis
+git clone https://github.com/mruiyangyou/COMP0239-Coursework.git
+cd COMP0239-Coursework/analysis
 
 streamlit run app.py
 ```
@@ -23,3 +23,6 @@ The test is carried out by running the batch analysis job on the huggingface dat
 python text_classification_pipeline_test.py "imdb"
 ```
 You can go to [Prefect UI](http://18.130.16.27:4200/dashboard) to monitor the pipeline.
+
+## Notebook to play with the postgre sql database on the client machine
+* [database notebooks](./notebook/check_db.ipynb): contain removing, creating and inserting the table mentioned for further analysis in the report

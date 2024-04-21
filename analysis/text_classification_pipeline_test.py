@@ -16,8 +16,16 @@ iterations = Counter('pipeline_iterations', 'Number of experiments executed')
 
 @task(retries=3, retry_delay_seconds=5, log_prints=True)
 def upload_dataset_to_s3(dataset_name: str) -> str:
+    """
+    Loads a specified dataset, extracts the 'test' part, converts it to a Pandas DataFrame, and uploads it to S3.
+
+    Args:
+        dataset_name (str): The name of the dataset to load.
+
+    Returns:
+        str: The full S3 path where the dataset was saved.
+    """
     dataset = load_dataset(dataset_name)
-    # dataset_keys = list(dataset.keys())
     dataset_keys = ['test']
     dfs = []
     for key in dataset_keys:
@@ -34,7 +42,17 @@ def upload_dataset_to_s3(dataset_name: str) -> str:
     return full_name
           
 @task
-def text_analysis(name: str, spark: SparkSession):
+def text_analysis(name: str, spark: SparkSession) -> str:
+    """
+    Loads a dataset from S3, performs text classification using a BERT model, and saves the results back to S3.
+
+    Args:
+        name (str): S3 path of the CSV file to analyze.
+        spark (SparkSession): Active Spark session.
+
+    Returns:
+        str: The S3 folder path where the analysis results are stored.
+    """
     classifier = pipeline(task="text-classification", model="philschmid/tiny-bert-sst2-distilled", truncation=True, top_k=None)
     
     @pandas_udf('string')
@@ -53,10 +71,17 @@ def text_analysis(name: str, spark: SparkSession):
     df.write.csv(s3_folder, mode="overwrite")
     return job_id
     
-    
 @task(retries=3, retry_delay_seconds=5,log_prints=True)
 def push_s3_sql(job_id: str, db: bool = False):
-    fs = s3fs.S3FileSystem(anon=False)  # Use anon=False if you're using AWS credentials
+    """
+    Collects all partial results from S3, merges them, and pushes a combined CSV back to S3.
+    Optionally, data can also be pushed to a SQL database.
+
+    Args:
+        job_id (str): Identifier for the job whose results are to be processed.
+        db (bool, optional): Whether to push results to SQL database. Defaults to False.
+    """
+    fs = s3fs.S3FileSystem(anon=False)  
     bucket_name = "comp0239-ucabryo"
     prefix = f"spark-result/{job_id}/"
     s3_directory = f"{bucket_name}/{prefix}"
@@ -67,9 +92,9 @@ def push_s3_sql(job_id: str, db: bool = False):
     for file in data_list:
         file_path = f"s3://{file}"
         df_part = pd.read_csv(file_path,
-                          names=["text", "label", "jobid"],  # Column names if there's no header
-                            header=None,  # Use if the first row is not a header
-                            escapechar="\\",  # Helps if your text includes quotes
+                          names=["text", "label", "jobid"], 
+                            header=None, 
+                            escapechar="\\", 
                             quotechar='"')
         dfs.append(df_part)  
         fs.rm(file)
@@ -89,7 +114,13 @@ def push_s3_sql(job_id: str, db: bool = False):
     
 @flow(retries=3, retry_delay_seconds=5, log_prints=True)
 def full_pipeline(name: str, spark_session: SparkSession):
+    """
+    Executes the full data processing pipeline from dataset uploading, text analysis to storage.
 
+    Args:
+        name (str): Dataset name.
+        spark_session (SparkSession): Spark session instance.
+    """
     path = upload_dataset_to_s3(name)
     path = path.replace("s3://", "s3a://")
     jobid = text_analysis(path, spark_session)
@@ -111,6 +142,7 @@ if __name__ == '__main__':
     parser.add_argument('dataset_name', type=str, help='Name of the dataset to upload')
     args = parser.parse_args()
     
+    # run for 360 times
     for _ in range(360):
         full_pipeline(args.dataset_name, spark)
         iterations.inc()

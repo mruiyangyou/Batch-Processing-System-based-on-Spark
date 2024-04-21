@@ -11,35 +11,32 @@ from pyspark.sql.functions import pandas_udf
 from pyspark.sql.functions import lit, col
 import argparse
 
-# @task(log_prints=True)
-# def upload_dataset_to_s3(source: str, dataset_name: str) -> str:
-#     dataset = load_dataset(dataset_name)
-#     # dataset_keys = list(dataset.keys())
-#     dataset_keys = ['test']
-#     dfs = []
-#     for key in dataset_keys:
-#         df = dataset[key].to_pandas()['text'].to_frame()
-#         dfs.append(df)
-    
-#     df = pd.concat(dfs, axis = 0)
-#     run_id = datetime.now().strftime('%Y%m%d%H%M%S')
-#     name = run_id + '_' + dataset_name + '.csv'
-#     full_name = f's3://comp0239-ucabryo/test-data/{name}'
-#     print(f'Saving: {full_name}')
-
-#     df.to_csv(full_name, index = None)
-#     return full_name
-          
 
 @task(log_prints=True)
 def upload_dataset_to_s3(source: str, id: str, **kwargs) -> str:
+    """
+    Uploads a dataset to S3, supporting both Hugging Face datasets and user-provided files.
+    
+    Args:
+        source (str): Source type ('hf' for Hugging Face, 'own' for own file).
+        id (str): Unique identifier used to name the output file.
+        **kwargs:
+            dataset_name (str): Required if source is 'hf'. Name of the dataset on Hugging Face.
+            file_path (str): Required if source is 'own'. Path to the user's file.
+
+    Returns:
+        str: The full S3 path where the file has been saved.
+
+    Raises:
+        ValueError: If required kwargs are missing based on the source type.
+    """
     if source == 'hf':
         dataset_name = kwargs.get('dataset_name')
         if dataset_name is None:
             raise ValueError("dataset_name is required for huggingface source")
         dataset = load_dataset(dataset_name)
-        # dataset_keys = list(dataset.keys())
-        dataset_keys = ['test']
+        dataset_keys = list(dataset.keys())
+        # dataset_keys = ['test']
         dfs = []
         for key in dataset_keys:
             df = dataset[key].to_pandas()['text'].to_frame()
@@ -61,6 +58,16 @@ def upload_dataset_to_s3(source: str, id: str, **kwargs) -> str:
           
 @task
 def text_analysis(name: str, spark: SparkSession):
+    """
+    Loads a dataset from S3, performs text classification using a BERT model, and saves the results back to S3.
+
+    Args:
+        name (str): S3 path of the CSV file to analyze.
+        spark (SparkSession): Active Spark session.
+
+    Returns:
+        str: The S3 folder path where the analysis results are stored.
+    """
     classifier = pipeline(task="text-classification", model="philschmid/tiny-bert-sst2-distilled", truncation=True, top_k=None)
     
     @pandas_udf('string')
@@ -82,7 +89,15 @@ def text_analysis(name: str, spark: SparkSession):
     
 @task(retries=3, retry_delay_seconds=5,log_prints=True)
 def push_s3_sql(job_id: str, db: bool = False):
-    fs = s3fs.S3FileSystem(anon=False)  # Use anon=False if you're using AWS credentials
+    """
+    Collects all partial results from S3, merges them, and pushes a combined CSV back to S3.
+    Optionally, data can also be pushed to a SQL database.
+
+    Args:
+        job_id (str): Identifier for the job whose results are to be processed.
+        db (bool, optional): Whether to push results to SQL database. Defaults to False.
+    """
+    fs = s3fs.S3FileSystem(anon=False) 
     bucket_name = "comp0239-ucabryo"
     prefix = f"spark-result/{job_id}/"
     s3_directory = f"{bucket_name}/{prefix}"
@@ -93,9 +108,9 @@ def push_s3_sql(job_id: str, db: bool = False):
     for file in data_list:
         file_path = f"s3://{file}"
         df_part = pd.read_csv(file_path,
-                          names=["text", "label", "jobid"],  # Column names if there's no header
-                            header=None,  # Use if the first row is not a header
-                            escapechar="\\",  # Helps if your text includes quotes
+                          names=["text", "label", "jobid"], 
+                            header=None, 
+                            escapechar="\\",  
                             quotechar='"')
         dfs.append(df_part)  
         fs.rm(file)
@@ -115,10 +130,21 @@ def push_s3_sql(job_id: str, db: bool = False):
     
 @flow(log_prints=True)
 def full_pipeline(source: str, id: str, spark_session: SparkSession, **kwargs):
+    """
+    Orchestrates a complete data processing pipeline from data upload to analysis and storage.
+
+    Args:
+        source (str): Source type ('hf' for Hugging Face, 'own' for own file).
+        id (str): Unique identifier for this run, used in naming outputs.
+        spark_session (SparkSession): Spark session for processing data.
+        **kwargs: Additional keyword arguments for specifying dataset details or file paths.
+
+    Raises:
+        Exception: Propagates exceptions from each step with appropriate logging.
+    """
     logger = get_run_logger()
     try:
         path = upload_dataset_to_s3(source, id, **kwargs)
-        # If the upload fails, the exception will be caught, and the pipeline can decide to halt or log the issue.
         path = path.replace("s3://", "s3a://")
     except Exception as e:
         # Log the error and potentially stop the pipeline or take corrective action
