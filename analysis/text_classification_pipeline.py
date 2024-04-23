@@ -51,9 +51,18 @@ def upload_dataset_to_s3(source: str, id: str, **kwargs) -> str:
 
         df.to_csv(full_name, index = None)
     elif source == 'own':
-        full_name = kwargs.get('file_path')
-        if full_name is None:
+        # full_name = kwargs.get('file_path')
+        # if full_name is None:
+        #     raise ValueError("file_path is required for upload your own data!")
+        original_path = kwargs.get('file_path')
+        if original_path is None:
             raise ValueError("file_path is required for upload your own data!")
+        # copy from app folder to test data folder
+        fs = s3fs.S3FileSystem()
+        new_path = original_path.replace('streamlit-data', 'test-data')
+        fs.copy(original_path, new_path)
+        print(f"File copied from {original_path} to {new_path}")
+        full_name = new_path
     return full_name
           
 @task
@@ -111,7 +120,8 @@ def push_s3_sql(job_id: str, db: bool = False):
                           names=["text", "label", "jobid"], 
                             header=None, 
                             escapechar="\\",  
-                            quotechar='"')
+                            quotechar='"',
+                            dtype={"text": str, "label": str, "jobid": str})
         dfs.append(df_part)  
         fs.rm(file)
         
@@ -160,7 +170,7 @@ def full_pipeline(source: str, id: str, spark_session: SparkSession, **kwargs):
     
     # Assuming text analysis succeeds, push results to S3 and optionally SQL
     try:
-        push_s3_sql(jobid)
+        push_s3_sql(jobid, bool = True)
     except Exception as e:
         logger.error(f"Failed to push results to S3/SQL. Error: {e}")
         raise

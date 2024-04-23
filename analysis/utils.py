@@ -12,7 +12,10 @@ def postgres_connection(db: str):
         sqlalchemy.engine.base.Engine: A SQLAlchemy engine instance connected to the specified database.
     """
     # connection_string = f'postgresql+psycopg2://{os.getenv("username")}:{os.getenv("password")}@18.171.239.205:5432/{db}'
-    connection_string = f'postgresql+psycopg2://{os.getenv("username")}:{os.getenv("password")}@10.0.9.168:5432/{db}'
+    
+    username = os.getenv("username", "ruiyang")
+    password = os.getenv("password", "123456")
+    connection_string = f'postgresql+psycopg2://{username}:{password}@10.0.9.168:5432/{db}'
     engine = create_engine(connection_string)
     return engine
 

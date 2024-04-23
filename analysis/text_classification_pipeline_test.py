@@ -95,7 +95,8 @@ def push_s3_sql(job_id: str, db: bool = False):
                           names=["text", "label", "jobid"], 
                             header=None, 
                             escapechar="\\", 
-                            quotechar='"')
+                            quotechar='"',
+                            dtype={"text": str, "label": str, "jobid": str})
         dfs.append(df_part)  
         fs.rm(file)
         

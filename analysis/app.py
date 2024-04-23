@@ -112,11 +112,11 @@ if st.button('Submit'):
                     mime='text/csv',
                 )
         
-        file_path = f"s3://comp0239-ucabryo/test-data/{run_id}_test.csv"
+        file_path = f"s3://comp0239-ucabryo/streamlit-data/{run_id}_test.csv"
         if option == 'Upload CSV File' and df is not None:
             df.to_csv(file_path, index = None)
             output, error = own_text_classification_pipeline(run_id, file_path)
-            st.write(f"Upload to :{file_path}")
+            # st.write(f"Upload to :{file_path}")
             if error:
                 st.error(f'Error during processing: {error}')
             else:
