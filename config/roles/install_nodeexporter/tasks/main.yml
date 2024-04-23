@@ -30,12 +30,3 @@
     name: node_exporter
     state: started
     daemon_reload: true
-# - name: open port 9100
-#   become: true
-#   become_user: root
-#   ansible.posix.firewalld:
-#     port: 9100/tcp
-#     permanent: true
-#     state: disabled
-#     zone: public
-#     immediate: true

@@ -1,70 +1,70 @@
-# - name: install yum packages
-#   ansible.builtin.dnf:
-#     name: "{{ packages }}"
-#   become: true
-#   vars:
-#     packages:
-#       - postgresql
-#       - postgresql-server
+- name: install yum packages
+  ansible.builtin.dnf:
+    name: "{{ packages }}"
+  become: true
+  vars:
+    packages:
+      - postgresql
+      - postgresql-server
 
-# - name: install python bindings for Postgres there
-#   ansible.builtin.pip:
-#     name: psycopg2-binary
-#   become: true
+- name: install python bindings for Postgres there
+  ansible.builtin.pip:
+    name: psycopg2-binary
+  become: true
 
-# - name: "Find out if PostgreSQL is initialized"
-#   ansible.builtin.stat:
-#     path: "/var/lib/pgsql/data/pg_hba.conf"
-#   register: postgres_data
-#   become: true
+- name: "Find out if PostgreSQL is initialized"
+  ansible.builtin.stat:
+    path: "/var/lib/pgsql/data/pg_hba.conf"
+  register: postgres_data
+  become: true
 
-# - name: initialise Postgresql
-#   ansible.builtin.shell: postgresql-setup initdb
-#   when: not postgres_data.stat.exists # Make this idempotent
-#   become: true
+- name: initialise Postgresql
+  ansible.builtin.shell: postgresql-setup initdb
+  when: not postgres_data.stat.exists # Make this idempotent
+  become: true
 
-# - name: start Postgres
-#   ansible.builtin.service:
-#     name: postgresql
-#     enabled: yes
-#     state: started
-#   become: true
+- name: start Postgres
+  ansible.builtin.service:
+    name: postgresql
+    enabled: yes
+    state: started
+  become: true
 
-# - name: "Create db user"
-#   community.postgresql.postgresql_user:
-#     state: present
-#     name: "ruiyang" # This is postgres's own user
-#     password: "123456"
-#     role_attr_flags: CREATEDB
-#   become: yes
-#   become_user: postgres #This is the system user.
+- name: "Create db user"
+  community.postgresql.postgresql_user:
+    state: present
+    name: "ruiyang" # This is postgres's own user
+    password: "123456"
+    role_attr_flags: CREATEDB
+  become: yes
+  become_user: postgres #This is the system user.
 
-# - name: Set listening to all remote IPs
-#   # become_user: root
-#   community.postgresql.postgresql_set:
-#     name: listen_addresses
-#     value: 0.0.0.0 # Not very secure, do something different for real
-#   become: yes
-#   become_user: postgres
-#   notify: restart postgres #Or it won't see the change in config file
+- name: Set listening to all remote IPs
+  # become_user: root
+  community.postgresql.postgresql_set:
+    name: listen_addresses
+    value: 0.0.0.0 # Not very secure, do something different for real
+  become: yes
+  become_user: postgres
+  notify: restart postgres #Or it won't see the change in config file
 
-# - name: "Allow md5 connection for the db user"
-#   # https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_pg_hba_module.html#ansible-collections-community-postgresql-postgresql-pg-hba-module
-#   community.postgresql.postgresql_pg_hba:
-#     dest: "~/data/pg_hba.conf" # The homedir is /var/lib/pgsql
-#     contype: host
-#     databases: all
-#     address: all # Insecure, but we only enabled my IP on Security Group anyway
-#     method: md5 # Require a password
-#     users: ruiyang
-#     create: true
-#   become: yes
-#   become_user: postgres
-#   notify: restart postgres #Or it won't see the change in config file
+- name: "Allow md5 connection for the db user"
+  # https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_pg_hba_module.html#ansible-collections-community-postgresql-postgresql-pg-hba-module
+  community.postgresql.postgresql_pg_hba:
+    dest: "~/data/pg_hba.conf" # The homedir is /var/lib/pgsql
+    contype: host
+    databases: all
+    address: all # Insecure, but we only enabled my IP on Security Group anyway
+    method: md5 # Require a password
+    users: ruiyang
+    create: true
+  become: yes
+  become_user: postgres
+  notify: restart postgres #Or it won't see the change in config file
 
-# - name: Connect to the primary we just made, and create a DB
-#   community.postgresql.postgresql_db:
-#     name: coursework
-#     login_host: 10.0.9.168
-#     login_password: 123456
-#     login_user: ruiyang
+- name: Connect to the primary we just made, and create a DB
+  community.postgresql.postgresql_db:
+    name: coursework
+    login_host: 10.0.9.168
+    login_password: 123456
+    login_user: ruiyang

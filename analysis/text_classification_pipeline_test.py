@@ -1,5 +1,4 @@
 from prefect import flow, task
-from upload_data import * 
 from datasets import load_dataset
 from datetime import datetime
 import s3fs
@@ -134,6 +133,7 @@ if __name__ == '__main__':
         .config("spark.executor.memory", "1536m") \
         .config("spark.python.worker.memory", "1536m") \
         .config("spark.hadoop.fs.s3a.bucket.all.committer.magic.enabled", "true") \
+        .config("spark.worker.cleanup.enabled", "true")\
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk:1.12.262,org.apache.spark:spark-hadoop-cloud_2.12:3.3.1") \
         .getOrCreate()
     
