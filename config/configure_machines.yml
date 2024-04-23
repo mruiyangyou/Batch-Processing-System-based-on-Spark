@@ -1,5 +1,5 @@
 - name: configure working machines
-  hosts: node_worker
+  hosts: database_server
   remote_user: ec2-user
   roles:
     - attach_storage

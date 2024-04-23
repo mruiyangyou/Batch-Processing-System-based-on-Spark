@@ -46,10 +46,10 @@ def upload_dataset_to_s3(source: str, id: str, **kwargs) -> str:
         # run_id = datetime.now().strftime('%Y%m%d%H%M%S')
         run_id = id
         name = run_id + '_' + dataset_name + '.csv'
-        full_name = f's3://comp0239-ucabryo/test-data/{name}'
-        print(f'Saving: {full_name}')
+        s3_path = f's3://comp0239-ucabryo/test-data/{name}'
+        print(f'Saving: {s3_path}')
 
-        df.to_csv(full_name, index = None)
+        df.to_csv(s3_path, index = None)
     elif source == 'own':
         # full_name = kwargs.get('file_path')
         # if full_name is None:
@@ -57,13 +57,13 @@ def upload_dataset_to_s3(source: str, id: str, **kwargs) -> str:
         original_path = kwargs.get('file_path')
         if original_path is None:
             raise ValueError("file_path is required for upload your own data!")
-        # copy from app folder to test data folder
-        fs = s3fs.S3FileSystem()
-        new_path = original_path.replace('streamlit-data', 'test-data')
-        fs.copy(original_path, new_path)
-        print(f"File copied from {original_path} to {new_path}")
-        full_name = new_path
-    return full_name
+        df = pd.read_csv(original_path)
+        df.dropna(inplace=True)
+        s3_path = original_path.replace('streamlit-data', 'test-data')
+        df.to_csv(s3_path, index = None)
+        # fs.copy(original_path, new_path)
+        print(f"File copied from {original_path} to {s3_path}")
+    return s3_path
           
 @task
 def text_analysis(name: str, spark: SparkSession):
