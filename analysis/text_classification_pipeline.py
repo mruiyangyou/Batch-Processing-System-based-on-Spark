@@ -1,5 +1,4 @@
 from prefect import flow, task, get_run_logger
-from upload_data import * 
 from datasets import load_dataset
 from datetime import datetime
 import s3fs
@@ -170,7 +169,7 @@ def full_pipeline(source: str, id: str, spark_session: SparkSession, **kwargs):
     
     # Assuming text analysis succeeds, push results to S3 and optionally SQL
     try:
-        push_s3_sql(jobid, bool = True)
+        push_s3_sql(jobid, db = True)
     except Exception as e:
         logger.error(f"Failed to push results to S3/SQL. Error: {e}")
         raise
@@ -185,6 +184,7 @@ if __name__ == '__main__':
         .config("spark.executor.memory", "1536m") \
         .config("spark.python.worker.memory", "1536m") \
         .config("spark.hadoop.fs.s3a.bucket.all.committer.magic.enabled", "true") \
+        .config("spark.worker.cleanup.enabled", "true")\
         .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk:1.12.262,org.apache.spark:spark-hadoop-cloud_2.12:3.3.1") \
         .getOrCreate()
     
