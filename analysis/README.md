@@ -22,10 +22,10 @@ ssh -i ~/.ssh/comp0239_key ec2-user@ec2-18-130-16-27.eu-west-2.compute.amazonaws
 
 Run the app
 ```bash
-git clone https://github.com/mruiyangyou/COMP0239-Coursework.git
-cd COMP0239-Coursework/analysis
+git clone https://github.com/mruiyangyou/Batch-Processing-System-based-on-Spark.git
+cd Batch-Processing-System-based-on-Spark/analysis
 
-streamlit run app.py
+streamlit run app.py --server.port 4200
 ```
 
 ## Run the reliability 24-hour test for testing the pipeline

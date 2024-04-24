@@ -7,8 +7,8 @@ You can access the front end by [Sentimental analysis by spark](http://18.171.23
 
 ## Project Structure
 
-1.  [**Part 1 Text Classification Service and App**](./analysis/README.md)
-2.  [**Part 2: Spark Infrastructure with Ansible**](./config/README.md)
+1.  [**Part 1: Spark Infrastructure with Ansible**](./config/README.md)
+2.  [**Part 2 Text Classification Service and App**](./analysis/README.md)
 
 ## Workflow
 This diagram provides a visual representation of the end-to-end process, from data ingestion to processing, and output. ![image](./docs/cw_flow0239.png)

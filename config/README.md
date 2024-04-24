@@ -3,8 +3,8 @@
 This section contains all the infrastrucutre as code notebooks by **ansible** to set up a spark cluster with six ec2 machines from scratch. Before start, please have a secret key to access the six ec2 machines, e.g `comp0239_key`. You can recreate my spark cluster settings and my enviroment for running **text classification analysis**:
 
 ```bash
-git clone https://github.com/mruiyangyou/COMP0239-Coursework.git
-cd COMP0239-Coursework/config
+git clone https://github.com/mruiyangyou/Batch-Processing-System-based-on-Spark.git
+cd Batch-Processing-System-based-on-Spark/config
 ansible-playbook -i inventory.ini configure_machines.yml --private-key=~/.ssh/comp0239_key
 ansible-playbook -i inventory.ini deploy_services.yml --private-key=~/.ssh/comp0239_key
 ```
@@ -17,7 +17,7 @@ ssh -i ~/.ssh/comp0239_key -L 8080:localhost:8080 ec2-user@ec2-18-171-62-1.eu-we
 
 Then if everything went smoothly, you can visit the spark UI, prefect UI and Grafana by [Spark Master UI](http://localhost:8080), [Prefect Server UI](http://18.130.16.27:4200), [Grafana UI](http://18.130.16.27:3000).
 
-## Comments for each notebook
+## Comments for each playbook(role)
 
 ### `configure_machines.yml`
 
