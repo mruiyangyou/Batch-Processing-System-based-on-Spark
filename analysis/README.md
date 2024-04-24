@@ -17,7 +17,7 @@ You can access the app by [Sentimental analysis by spark](http://18.171.239.205:
 
 Connect to the client machine
 ```bash
-ssh -i ~/.ssh/comp0239_key ec2-user@ec2-18-130-16-27.eu-west-2.compute.amazonaws.com
+ssh -i ~/.ssh/comp0239_key ec2-user@ec2-18-171-239-205.eu-west-2.compute.amazonaws.com
 ```
 
 Run the app
