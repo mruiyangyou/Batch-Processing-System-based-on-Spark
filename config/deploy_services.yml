@@ -1,11 +1,13 @@
 - name: Deploy spark
   hosts: node_worker:node_master
+  remote_user: ec2-user
   roles:
     - spark_install
     - configure_spark
 
 - name: Start Spark master
   hosts: node_master
+  remote_user: ec2-user
   roles:
     - spark_host
     - deploy_monitoring

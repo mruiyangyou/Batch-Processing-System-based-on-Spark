@@ -7,9 +7,8 @@
     state: present
     create: yes
   loop:
-    - 'export SPARK_HOME=/opt/spark'
-    - 'export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin'
-
+    - "export SPARK_HOME=/opt/spark"
+    - "export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin"
 
 - name: Source .bashrc to apply changes immediately
   become: true
@@ -17,9 +16,8 @@
   ansible.builtin.shell: source /home/ec2-user/.bashrc
   args:
     executable: /bin/bash
-
-- name: start the spark on the host
-  become: true
-  become_user: ec2-user
-  ansible.builtin.shell:
-    cmd: start-master.sh
+# - name: start the spark on the host
+#   become: true
+#   become_user: ec2-user
+#   ansible.builtin.shell:
+#     cmd: start-master.sh
