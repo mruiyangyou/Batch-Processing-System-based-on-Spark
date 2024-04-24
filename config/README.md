@@ -9,13 +9,18 @@ ansible-playbook -i inventory.ini configure_machines.yml --private-key=~/.ssh/co
 ansible-playbook -i inventory.ini deploy_services.yml --private-key=~/.ssh/comp0239_key
 ```
 
-As the port 8080 is not open for all ip address under our security group, you need to perform ssh tunel on the host machine before access the spark UI
+### Note
+
+If you are running the `deploy_services.yml` on six fresh ec2 machines, please uncomment all the parts in the [install spark and java](./roles/spark_install/tasks/main.yml), [spark_host](./roles/spark_host/tasks/main.yml) and [spark_worker](./roles/spark_worker/tasks/main.yml). As right now, all the spark service is turned on for my cluster.
+
+### Access the service
+As the port 8080 is not open for all ip address under our security group, you need to perform ssh tunel on the host machine before access the spark UI. Or if the port 8080 has been open, Spark UI can be directly visited by [http://18.130.16.27:8080](http://18.130.16.27:8080).
 
 ```bash
-ssh -i ~/.ssh/comp0239_key -L 8080:localhost:8080 ec2-user@ec2-18-171-62-1.eu-west-2.compute.amazonaws.com -o ServerAliveInterval=60 -o ServerAliveCountMax=2
+ssh -i ~/.ssh/comp0239_key -L 8080:localhost:8080 ec2-user@ec2-18-130-16-27.eu-west-2.compute.amazonaws.com -o ServerAliveInterval=60 -o ServerAliveCountMax=2
 ```
 
-Then if everything went smoothly, you can visit the spark UI, prefect UI and Grafana by [Spark Master UI](http://localhost:8080), [Prefect Server UI](http://18.130.16.27:4200), [Grafana UI](http://18.130.16.27:3000).
+Then if everything went smoothly, you can visit the spark UI, prefect UI and Grafana by [Spark Master UI: http://localhost:8080](http://localhost:8080), [Prefect Server UI](http://18.130.16.27:4200), [Grafana UI](http://18.130.16.27:3000).
 
 ## Comments for each playbook(role)
 
@@ -54,3 +59,4 @@ Then if everything went smoothly, you can visit the spark UI, prefect UI and Gra
 - deploy postgre sql and prefect on client machine (spark driver)
   - [deploy_postgre](./roles/deploy_postgre/tasks/main.yml): deploy postgre sql on the client machine and create db user and database `coursework`
   - [connect_prefect](./roles/connect_prefect/tasks/main.yml): connect to the prefect server so that all the pipeline on client machines can be monitored
+
